@@ -1,0 +1,179 @@
+/* =========================================
+   GLOBAL STYLES
+   ========================================= */
+body {
+    font-family: 'Amatic SC', cursive;
+    background: #FDE3A7;
+    text-align: center;
+    padding: 50px;
+    margin: 0;
+    overflow: hidden;
+}
+
+/* =========================================
+   LOADING SCREEN
+   ========================================= */
+#loading-screen, #redirect-loading {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background: #FDE3A7;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 1s ease;
+}
+
+#loading-screen.hidden, #redirect-loading.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.loading-content {
+    text-align: center;
+}
+
+.loading-content h2 {
+    color: #013243;
+    font-size: 32px;
+    margin-bottom: 30px;
+}
+
+.loading-image {
+    width: 15vw;            /* 15% dari lebar viewport */
+    height: 15vw;
+    max-width: 500px;
+    max-height: 500px;
+    object-fit: cover;
+}
+
+/* =========================================
+   LOADING SPINNER
+   ========================================= */
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #1BBC9B;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 20px auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* =========================================
+   CAKE SECTION
+   ========================================= */
+#cake-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 10;
+    transition: opacity 1s ease;
+}
+
+#cake-section h1 {
+    color: white;
+    margin-bottom: 30px;
+    text-align: center;
+    font-size: 28px;
+    font-weight: bold;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.cake-container {
+    position: relative;
+    width: 300px;
+    height: 300px;
+    margin: 0 auto;
+}
+
+.cake-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.candle {
+    position: absolute;
+    width: 12px;
+    height: 50px;
+    background: repeating-linear-gradient(45deg, #ff0000, #ff0000 5px, #cc0000 5px, #cc0000 10px);
+    bottom: 210px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 2px;
+}
+
+.flame {
+    width: 20px;
+    height: 30px;
+    background: radial-gradient(ellipse at bottom, #ffff00 0%, #ff6600 40%, #ff0000 100%);
+    border-radius: 50% 50% 20% 20%;
+    position: absolute;
+    bottom: 50px;
+    left: -4px;
+    box-shadow: 0 0 15px #ff6600, 0 0 30px #ff0000;
+    animation: flicker 0.3s infinite alternate;
+}
+
+.flame.out {
+    opacity: 0;
+    transform: scale(0);
+    animation: none;
+}
+
+.smoke {
+    position: absolute;
+    bottom: 50px;
+    left: -4px;
+    width: 10px;
+    height: 10px;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 50%;
+    opacity: 0;
+}
+
+.smoke.rise {
+    animation: smokeRise 2s forwards;
+}
+
+@keyframes flicker {
+    0% { transform: scale(1) rotate(-3deg); }
+    100% { transform: scale(1.1) rotate(3deg); }
+}
+
+@keyframes smokeRise {
+    0% { transform: translateY(0) scale(1); opacity: 0.8; }
+    100% { transform: translateY(-60px) scale(4); opacity: 0; }
+}
+
+#startBtn {
+    padding: 12px 25px;
+    font-size: 16px;
+    background-color: #27ae60;
+    color: white;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    margin-top: 20px;
+}
+
+#status {
+    margin-top: 15px;
+    font-size: 18px;
+    color: #013243;
+}

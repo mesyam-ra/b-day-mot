@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ulang Tahun Interaktif</title>
+
+    <!-- Link ke CSS eksternal -->
+    <link rel="stylesheet" href="cake.css">
+
+    <!-- Import Font Amatic SC -->
+    <link href="https://fonts.googleapis.com/css?family=Amatic+SC" rel="stylesheet">
+</head>
+<body>
+
+    <!-- LOADING SCREEN PERTAMA -->
+<div id="loading-screen">
+    <div class="loading-content">
+        <h1>Loading...</h1>
+        <img src="foto4.png" alt="Loading Image" class="loading-image" style="width: 500px; height: 500px;">
+    </div>
+</div>
+
+    <!-- LOADING SCREEN (Sebelum Redirect) -->
+    <div id="redirect-loading" class="hidden">
+        <div class="loading-content">
+            <h2>Redirecting...</h2>
+            <div class="loading-spinner"></div>
+            <p id="redirect-text">Preparing birthday card...</p>
+            <div class="loading-progress">
+                <div class="progress-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CAKE SECTION -->
+    <div id="cake-section">
+        <h1>Blow Out The Candles</h1>
+
+        <div class="cake-container">
+            <img src="kue.png" alt="Kue Ulang Tahun" class="cake-img">
+
+            <div class="candle" data-candle="1">
+                <div class="flame" id="flame-1"></div>
+                <div class="smoke" id="smoke-1"></div>
+            </div>
+        </div>
+
+        <button id="startBtn">allow access to mic</button>
+        <div id="status"></div>
+    </div>
+
+    <script>
+        const startBtn = document.getElementById('startBtn');
+        const statusText = document.getElementById('status');
+        const loadingScreen = document.getElementById('loading-screen');
+        const redirectLoading = document.getElementById('redirect-loading');
+        const loadingPhotos = document.querySelectorAll('.loading-photo');
+        const loadingText = document.getElementById('loading-text');
+        const redirectText = document.getElementById('redirect-text');
+        const progressBar = document.querySelector('.progress-bar');
+
+        let audioContext;
+        let analyser;
+        let microphone;
+        let javascriptNode;
+        let candleBlownOut = false;
+        let isListening = false;
+        let volumeHistory = [];
+        let historyIndex = 0;
+        const HISTORY_SIZE = 10;
+
+        // URL tujuan redirect otomatis
+        const redirectUrl = "https://pnbtech.my.canva.site/bday-mott";
+
+        // =========================================
+        // LOADING SCREEN AWAL
+        // =========================================
+        let currentPhotoIndex = 0;
+        let loadingComplete = false;
+        const PHOTOS = ["foto1.png", "foto2.png", "foto3.png"];
+        const LOADING_TEXTS = [
+            "Preparing birthday surprise...",
+            "Loading memories...",
+            "Almost ready...",
+            "Finalizing..."
+        ];
+
+        function startLoadingAnimation() {
+            const photoInterval = setInterval(() => {
+                if (loadingComplete) {
+                    clearInterval(photoInterval);
+                    return;
+                }
+                loadingPhotos[currentPhotoIndex].classList.remove('active');
+                currentPhotoIndex = (currentPhotoIndex + 1) % PHOTOS.length;
+                loadingPhotos[currentPhotoIndex].classList.add('active');
+                loadingText.innerText = LOADING_TEXTS[currentPhotoIndex % LOADING_TEXTS.length];
+            }, 2000);
+        }
+
+        function startProgressBar() {
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                if (loadingComplete) {
+                    clearInterval(progressInterval);
+                    return;
+                }
+                progress += 1;
+                progressBar.style.width = progress + '%';
+
+                if (progress >= 100) {
+                    loadingComplete = true;
+                    clearInterval(progressInterval);
+                    finishLoading();
+                }
+            }, 50);
+        }
+
+        function finishLoading() {
+            setTimeout(() => {
+                loadingScreen.classList.add('hidden');
+                console.log("Loading complete! Ready to use.");
+            }, 500);
+        }
+
+        // =========================================
+        // CAKE & MICROPHONE LOGIC
+        // =========================================
+        startBtn.addEventListener('click', async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                microphone = audioContext.createMediaStreamSource(stream);
+                javascriptNode = audioContext.createScriptProcessor(2048, 1, 1);
+
+                analyser.smoothingTimeConstant = 0.85;
+                analyser.fftSize = 1024;
+
+                microphone.connect(analyser);
+                analyser.connect(javascriptNode);
+                javascriptNode.connect(audioContext.destination);
+
+                startBtn.style.display = 'none';
+                statusText.innerText = "Blow into the mic...";
+                isListening = true;
+
+                javascriptNode.onaudioprocess = () => {
+                    if (!isListening || candleBlownOut) return;
+
+                    const array = new Uint8Array(analyser.frequencyBinCount);
+                    analyser.getByteFrequencyData(array);
+
+                    let sum = 0;
+                    for (let i = 0; i < 50; i++) {
+                        sum += array[i];
+                    }
+                    const average = sum / 50;
+
+                    volumeHistory[historyIndex] = average;
+                    historyIndex = (historyIndex + 1) % HISTORY_SIZE;
+
+                    let total = 0;
+                    for (let i = 0; i < HISTORY_SIZE; i++) {
+                        total += volumeHistory[i];
+                    }
+                    const avgVolume = total / HISTORY_SIZE;
+
+                    if (avgVolume > 150) {
+                        blowOutCandle();
+                        isListening = false;
+                        javascriptNode.onaudioprocess = null;
+                    }
+                };
+
+            } catch (err) {
+                console.error(err);
+                statusText.innerText = "Gagal mengakses mikrofon. Pastikan izin diberikan.";
+            }
+        });
+
+        // =========================================
+        // BLOW OUT CANDLE & REDIRECT
+        // =========================================
+        function blowOutCandle() {
+            candleBlownOut = true;
+
+            const flames = document.querySelectorAll('.flame');
+            const smokes = document.querySelectorAll('.smoke');
+
+            flames.forEach(flame => {
+                flame.classList.add('out');
+            });
+
+            smokes.forEach(smoke => {
+                smoke.classList.add('rise');
+            });
+
+            statusText.innerText = "Happy Birthday! Loading card...";
+
+            // Tampilkan loading screen sebelum redirect
+            setTimeout(() => {
+                showRedirectLoading();
+            }, 1000);
+        }
+
+        function showRedirectLoading() {
+            redirectLoading.classList.remove('hidden');
+
+            const redirectMessages = [
+                "Preparing birthday card...",
+                "Loading memories...",
+                "Almost ready...",
+                "Finalizing..."
+            ];
+
+            let messageIndex = 0;
+            const messageInterval = setInterval(() => {
+                redirectText.innerText = redirectMessages[messageIndex % redirectMessages.length];
+                messageIndex++;
+            }, 1500);
+
+            // Simulasi loading progress
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += 1;
+                progressBar.style.width = progress + '%';
+
+                if (progress >= 100) {
+                    clearInterval(progressInterval);
+                    clearInterval(messageInterval);
+                    setTimeout(() => {
+                        redirectToCanva();
+                    }, 500);
+                }
+            }, 50);
+        }
+
+        function redirectToCanva() {
+            statusText.innerText = "Redirecting to birthday card...";
+            setTimeout(() => {
+                window.location.href = redirectUrl;
+            }, 1000);
+        }
+
+        // =========================================
+        // INITIALIZE
+        // =========================================
+        startLoadingAnimation();
+        startProgressBar();
+    </script>
+</body>
+</html>
